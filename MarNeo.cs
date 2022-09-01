@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using BizHawk.Client.Common;
 using BizHawk.Client.EmuHawk;
@@ -25,6 +26,7 @@ namespace MarNEO
 
         private bool initialized;
         private int frameCounter;
+        private int screenshotCounter = 0;
 
         private int listenPort;
         private Socket listenerSocket;
@@ -93,10 +95,15 @@ namespace MarNEO
                 initialized = true;
 
                 IList<float> initObs = CollectObservations();
+                String file_path = String.Format("C:/Users/rasajski/PycharmProjects/MarNEO/screenshots/{0}.png", screenshotCounter++);
+                var screenshot = ((MainForm)MainForm).MakeScreenshotImage();
+                screenshot.ToSysdrawingBitmap().Save(file_path);
                 SendMessage(new
                 {
                     ready = true,
-                    observation = initObs
+                    observation = initObs,
+                    pixel_representation = file_path
+
                 });
 
                 frameCounter = ACTION_INTERVAL;
@@ -123,11 +130,17 @@ namespace MarNEO
                     } else
                     {
                         obs = CollectObservations();
+                        String file_path = String.Format("C:/Users/rasajski/PycharmProjects/MarNEO/screenshots/{0}.png", screenshotCounter++);
+                        var screenshot = ((MainForm)MainForm).MakeScreenshotImage();
+                        screenshot.ToSysdrawingBitmap().Save(file_path);
+                        //APIs.EmuClient.Screenshot(file_path);
                         SendMessage(new
                         {
                             observation = obs,
                             reward = reward,
-                            done = false
+                            done = false,
+                            pixel_representation = file_path
+
                         });
                     }
                 }

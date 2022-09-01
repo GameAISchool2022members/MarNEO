@@ -173,6 +173,7 @@ class MarneoEnv(gym.Env):
                 msg = self._game_inst.get_init_message()
                 observation = self._parse_observation(msg['observation'])
                 info = self._get_info()
+                info['pixel_representation'] = msg['pixel_representation']
                 return (observation, info) if return_info else observation
             except MarneoInstanceException:
                 print('Warning: encountered error when starting game, trying again')
@@ -188,6 +189,7 @@ class MarneoEnv(gym.Env):
         else:
             observation = np.zeros(self.observation_space.shape)
         info = self._get_info()
+        info['pixel_representation'] = msg['pixel_representation']
         return observation, reward, done, info
 
     def close(self):
