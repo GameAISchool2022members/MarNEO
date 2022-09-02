@@ -16,6 +16,8 @@ using Newtonsoft.Json.Linq;
 using BizHawk.Emulation.Common;
 using BizHawk.Common.NumberExtensions;
 using System.Drawing;
+using static BizHawk.Client.EmuHawk.BatchRunner;
+using System.Collections;
 
 namespace MarNEO
 {
@@ -142,6 +144,7 @@ namespace MarNEO
 
         protected override void UpdateAfter()
         {
+            Hide();
             var config = ((MainForm)MainForm).Config;
             if (config != null)
             {
@@ -267,12 +270,14 @@ namespace MarNEO
                     } else
                     {
                         obs = CollectObservations();
+                        int mario_score = CollectGameScoreInt();
                         SendMessage(new
                         {
                             observation = obs,
                             reward = reward,
                             screenshotPath = screenshotPath,
-                            done = false
+                            done = false,
+                            mario_score = mario_score
                         });
                     }
                 }
@@ -360,6 +365,40 @@ namespace MarNEO
             // if you change this you need to update the python script's observation_space too
             List<byte> raw = APIs.Memory.ReadByteRange(0x0, 0x100); 
             return raw.Select(b => b / 255.0f).ToList();
+        }
+
+
+        private int CollectGameScoreInt()
+        {
+            var locations = new long[] { 0x07E2, 0x07E1, 0x07E0, 0x07DF, 0x07DE, 0x07DD };
+            List<uint> values = new List<uint>();
+            foreach(var location in locations)
+            {
+                values.Add(APIs.Memory.ReadByte(location));
+            }
+
+            uint result = 0;
+            for (int i = 0; i < values.Count; i++)
+            {
+                int multiplier = (int)Math.Pow(10, i + 1);
+                result += (uint)multiplier * values[i];
+            }
+            /*
+            uint raw1 = APIs.Memory.ReadByte(0x07DD);
+            uint raw2 = APIs.Memory.ReadByte(0x07DE);
+            uint raw3 = APIs.Memory.ReadByte(0x07DF);
+            uint raw4 = APIs.Memory.ReadByte(0x07E0);
+            uint raw5 = APIs.Memory.ReadByte(0x07E1);
+            uint raw6 = APIs.Memory.ReadByte(0x07E2);
+            result += 1000000 * raw1;
+            result += 100000 * raw2;
+            result += 10000 * raw3;
+            result += 1000 * raw4;
+            result += 100 * raw5;
+            result += 10 * raw6;
+            */
+
+            return (int)result;
         }
 
         private void EvaluateAction(out float reward, out bool done)

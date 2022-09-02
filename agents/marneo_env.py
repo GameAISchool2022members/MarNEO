@@ -201,6 +201,7 @@ class MarneoEnv(gym.Env):
             observation = np.zeros(self.observation_space.shape)
         info = self._get_info()
         info['screenshotPath'] = msg['screenshotPath']
+        info['mario_score'] = msg['mario_score']
         return observation, reward, done, info
 
     def close(self):
